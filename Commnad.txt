@@ -1,0 +1,61 @@
+# File and Directory Management
+ls                      # List files and directories
+ls -l                   # List files with detailed info
+ls -a                   # List all files including hidden ones
+
+cd /path/to/directory   # Change directory
+cd ..                   # Move up one directory level
+pwd                     # Print current working directory
+
+mkdir myfolder          # Create a new directory
+rmdir myfolder          # Remove an empty directory
+rm file.txt             # Remove a file
+rm -r foldername        # Remove a directory and its contents
+
+cp file1.txt file2.txt           # Copy a file
+cp -r dir1 dir2                  # Copy a directory
+mv file.txt /path/to/directory/  # Move a file
+mv oldname.txt newname.txt       # Rename a file
+
+# File Viewing and Editing
+cat file.txt            # View the contents of a file
+nano file.txt           # Edit a file with Nano editor
+less file.txt           # View file contents with pagination
+touch newfile.txt       # Create an empty file
+
+# System Information
+uname -a                # Display system information
+df -h                   # Show disk space usage
+free -h                 # Show memory usage
+top                     # Display running processes
+whoami                  # Show current logged-in user
+hostname                # Display system's hostname
+
+# Package Management
+sudo apt update                 # Update the package list
+sudo apt upgrade                # Upgrade all installed packages
+sudo apt install package_name   # Install a new package
+sudo apt remove package_name    # Remove a package
+sudo apt autoremove             # Remove unnecessary packages
+
+# File Permissions
+chmod 755 file.txt              # Change file permissions
+sudo chown user:user file.txt   # Change file ownership
+
+# Networking
+ping google.com                    # Test connectivity to another host
+ifconfig                           # Display network configuration details
+wget https://example.com/file.zip  # Download a file from the internet
+
+# Process Management
+ps aux                  # Display running processes
+kill 1234               # Terminate a process by its ID
+killall processname     # Terminate all processes by name
+
+# System Shutdown and Reboot
+sudo shutdown -h now    # Shut down the system immediately
+sudo reboot             # Reboot the system
+
+# Check Number of Installed Packages
+dpkg --get-selections | wc -l     # Count installed packages using dpkg
+apt list --installed | wc -l      # Count installed packages using apt
