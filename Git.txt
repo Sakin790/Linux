@@ -6,4 +6,5 @@ git commit -m "what you did"
 git push
 
 
-
+How to push local branches
+git push -u origin <branch-name>
