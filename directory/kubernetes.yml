@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: pod
+metadata:
+  name: myWebaApplication
+
+spec:
+  containers:
+    -name: x
+
