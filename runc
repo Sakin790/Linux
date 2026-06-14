@@ -1,0 +1,7 @@
+
+
+runc spec 
+sudo runc run my_container 
+wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.1-x86_64.tar.gz
+sudo tar -xf alpine-minirootfs-3.19.1-x86_64.tar.gz -C rootfs
+
