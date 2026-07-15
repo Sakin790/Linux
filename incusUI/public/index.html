@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incus Container Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- হেডার সেকশন -->
+        <header class="mb-8 border-b border-slate-800 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-sky-400 tracking-tight">Incus Dashboard</h1>
+                <p class="text-slate-400 text-sm mt-1">কাস্টম নো-Xterm টার্মিনাল কনসোল</p>
+            </div>
+            <button onclick="fetchContainers()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-4 py-2 rounded-lg text-sm font-semibold transition border border-slate-700">
+                🔄 রিফ্রেশ কন্টেইনার
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- বামে: কন্টেইনার লিস্ট -->
+            <div class="lg:col-span-1 bg-slate-950 border border-slate-800 rounded-xl p-6 shadow-xl h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-slate-200 flex items-center gap-2">📦 কন্টেইনারসমূহ</h2>
+                <div id="containerList" class="space-y-3">
+                    <p class="text-slate-500 text-sm italic animate-pulse">কন্টেইনার লোড হচ্ছে...</p>
+                </div>
+            </div>
+
+            <!-- ডানে: কাস্টম টার্মিনাল UI -->
+            <div class="lg:col-span-2 flex flex-col bg-slate-950 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
+                <!-- টার্মিনাল হেডার -->
+                <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span id="statusIndicator" class="w-3 h-3 rounded-full bg-slate-600"></span>
+                        <span id="terminalTitle" class="font-mono text-sm text-slate-300">Disconnected</span>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">HTML Live Terminal</span>
+                </div>
+                
+                <!-- টার্মিনাল বডি -->
+                <div class="relative flex-1 flex flex-col bg-black p-4 h-[500px]">
+                    <!-- প্লেসহোল্ডার (যখন কানেক্টেড থাকবে না) -->
+                    <div id="terminalPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-black z-10">
+                        <span class="text-4xl mb-2">📟</span>
+                        <p class="text-sm">কানেক্ট করতে রানিং কন্টেইনারের পাশে থাকা কনসোল বাটনে ক্লিক করুন</p>
+                    </div>
+
+                    <!-- লাইভ আউটপুট এরিয়া -->
+                    <pre id="terminalOutput" class="flex-1 w-full overflow-y-auto font-mono text-sm text-emerald-400 whitespace-pre-wrap break-all select-text mb-2 bg-transparent outline-none scrollbar-thin scrollbar-thumb-slate-800"></pre>
+                    
+                    <!-- লাইভ কমান্ড ইনপুট লাইন -->
+                    <div class="flex items-center border-t border-slate-900 pt-2 bg-black">
+                        <span class="font-mono text-sky-400 mr-2 select-none">#</span>
+                        <input type="text" id="terminalInput" disabled
+                            class="flex-1 bg-transparent border-none text-white font-mono text-sm focus:outline-none placeholder-slate-800"
+                            placeholder="এখানে কমান্ড লিখে Enter চাপুন..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentWs = null;
+
+        // কন্টেইনার লিস্ট নিয়ে আসার ফাংশন
+        async function fetchContainers() {
+            try {
+                const response = await fetch('/api/containers');
+                const data = await response.json();
+                const listDiv = document.getElementById('containerList');
+                listDiv.innerHTML = '';
+
+                if (!data.containers || data.containers.length === 0) {
+                    listDiv.innerHTML = '<p class="text-slate-500 text-sm italic">কোনো কন্টেইনার পাওয়া যায়নি।</p>';
+                    return;
+                }
+
+                data.containers.forEach(container => {
+                    const name = container.name;
+                    const status = container.status ? container.status.toUpperCase() : 'STOPPED';
+                    const isRunning = status === 'RUNNING';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'p-4 bg-slate-900/50 border border-slate-800 rounded-lg flex justify-between items-center hover:border-slate-700 transition';
+                    
+                    card.innerHTML = `
+                        <div>
+                            <div class="font-mono font-bold text-slate-200">${name}</div>
+                            <div class="text-xs mt-1 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                                <span class="${isRunning ? 'text-emerald-400' : 'text-rose-400'} font-semibold text-[11px]">${status}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleState('${name}', '${isRunning ? 'stop' : 'start'}')" 
+                                class="px-3 py-1.5 rounded text-xs font-medium transition ${isRunning ? 'bg-rose-950/50 hover:bg-rose-900 text-rose-400 border border-rose-900/50' : 'bg-emerald-950/50 hover:bg-emerald-900 text-emerald-400 border border-emerald-900/50'}">
+                                ${isRunning ? '🛑 Stop' : '▶️ Start'}
+                            </button>
+                            <button onclick="${isRunning ? `connectTerminal('${name}')` : "alert('কন্টেইনারটি আগে স্টার্ট করুন!')"}" 
+                                class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition ${!isRunning ? 'opacity-40 cursor-not-allowed' : ''}">
+                                📟
+                            </button>
+                        </div>
+                    `;
+                    listDiv.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error fetching containers:', error);
+            }
+        }
+
+        // কন্টেইনার স্টার্ট/স্টপ হ্যান্ডলার
+        async function toggleState(name, action) {
+            try {
+                const response = await fetch(`/api/containers/${name}/state`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setTimeout(fetchContainers, 2000);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // টার্মিনাল সকেটে কানেক্ট করার লজিক
+        function connectTerminal(containerName) {
+            document.getElementById('terminalPlaceholder').classList.add('hidden');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const terminalTitle = document.getElementById('terminalTitle');
+            const outputScreen = document.getElementById('terminalOutput');
+            const inputField = document.getElementById('terminalInput');
+            
+            statusIndicator.className = "w-3 h-3 rounded-full bg-amber-500 animate-pulse";
+            terminalTitle.innerText = `Connecting to ${containerName}...`;
+            outputScreen.textContent = 'কানেকশন তৈরি করা হচ্ছে...\n';
+            
+            inputField.disabled = false;
+            inputField.placeholder = "কমান্ড লিখুন...";
+            inputField.focus();
+
+            if (currentWs) {
+                currentWs.close();
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/${containerName}`);
+            currentWs = ws;
+
+            ws.onmessage = async (event) => {
+                let text = '';
+                if (event.data instanceof Blob) {
+                    text = await event.data.text();
+                } else {
+                    text = event.data;
+                }
+                
+                // ANSI Color/Style codes এবং টার্মিনাল escape codes ফিল্টারিং
+                const cleanText = text.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+                
+                outputScreen.textContent += cleanText;
+                outputScreen.scrollTop = outputScreen.scrollHeight;
+            };
+
+            ws.onopen = () => {
+                statusIndicator.className = "w-3 h-3 rounded-full bg-emerald-500 animate-ping";
+                terminalTitle.innerText = `root@${containerName}:~`;
+                outputScreen.textContent += `[Connected to ${containerName} successfully]\n\n`;
+                
+                // কানেকশন স্ট্যাবল রাখতে এবং সেশনের রেসপন্স ট্রিগার করতে এন্টার পাঠানো হলো
+                ws.send('\n'); 
+            };
+
+            inputField.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    const command = inputField.value;
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(command + '\n');
+                    }
+                    inputField.value = '';
+                }
+            };
+
+            ws.onclose = () => {
+                statusIndicator.className = "w-3 h-3 rounded-full bg-rose-600";
+                terminalTitle.innerText = "Disconnected";
+                outputScreen.textContent += '\n\n[কানেকশন বন্ধ হয়ে গেছে]';
+                inputField.disabled = true;
+                inputField.placeholder = "ডিসকানেক্টেড...";
+            };
+
+            ws.onerror = (err) => {
+                statusIndicator.className = "w-3 h-3 rounded-full bg-rose-600";
+                outputScreen.textContent += '\n\n[WebSocket Error: সকেটে সমস্যা হয়েছে]';
+                inputField.disabled = true;
+            };
+        }
+
+        window.onload = fetchContainers;
+    </script>
+</body>
+</html>
