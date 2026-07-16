@@ -1,0 +1,6 @@
+
+apt update
+sudo apt install openssh-client -y
+sudo systemctl status ssh
+sudo apt install openssh-server -y
+sudo systemctl enable --now ssh
