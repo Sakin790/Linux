@@ -1,4 +1,4 @@
-
+-------------System Setting------------
 apt update
 sudo apt install openssh-client -y
 sudo systemctl status ssh
@@ -6,7 +6,36 @@ sudo apt install openssh-server -y
 sudo systemctl enable --now ssh
 
 
-
+--------Generate Key-------------
 ssh-keygen -t ed25519 -C "sakinislam@gmail.com"
 ssh-copy-id username@server_ip
 
+-------config-------------------
+Amar home dir te ls -a korle .ssh folder pabo tar moddhe config file ache ! 
+
+Host webserver
+    HostName 192.168.56.101
+    User sakin
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+
+without : ssh -p 2222 sakin@192.168.56.101 -i ~/.ssh/id_ed25519
+with    : ssh webserver
+ 
+
+
+Ata sobar jonno applicable Hobe
+Host *
+    ServerAliveInterval 60
+    Compression yes
+
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_github
+
+Host prod-db
+    HostName 10.0.0.5
+    User deploy
+    Port 8724
+    IdentityFile ~/.ssh/id_production
