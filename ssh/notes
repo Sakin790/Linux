@@ -4,3 +4,9 @@ sudo apt install openssh-client -y
 sudo systemctl status ssh
 sudo apt install openssh-server -y
 sudo systemctl enable --now ssh
+
+
+
+ssh-keygen -t ed25519 -C "sakinislam@gmail.com"
+ssh-copy-id username@server_ip
+
