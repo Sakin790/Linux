@@ -1,0 +1,7 @@
+লিনাক্সে ফায়ারওয়াল বোঝার জন্য আমাদের মূলত ৩টি জিনিস বুঝতে হবে: Netfilter, iptables, আর UFW/Firewalld।
+
+sudo ufw allow ssh
+sudo ufw enable
+sudo ufw status
+sudo ufw allow http
+sudo ufw deny http
