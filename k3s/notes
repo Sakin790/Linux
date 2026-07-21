@@ -1,0 +1,6 @@
+
+incus launch images:ubuntu/24.04 k3s-master --vm -c limits.cpu=2 -c limits.memory=2GiB
+
+incus launch images:ubuntu/24.04 k3s-worker-1 --vm -c limits.cpu=1 -c limits.memory=1.5GiB
+
+incus launch images:ubuntu/24.04 k3s-worker-2 --vm -c limits.cpu=1 -c limits.memory=1.5GiB
