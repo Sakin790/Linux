@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perfect-app-deployment
+  namespace: production
+  labels:
+    app.kubernetes.io/name: perfect-app
+    app.kubernetes.io/version: "1.2.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: perfect-app
+  template:
+    metadata:
+      labels:
+        app: perfect-app
+    spec:
+      # ১. সিকিউরিটি: Dedicated Service Account
+      serviceAccountName: perfect-app-sa
+      
+      # ২. সিকিউরিটি Context (Non-root execution)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+
+      containers:
+      - name: app
+        image: my-registry/perfect-app:v1.2.0
+        imagePullPolicy: IfNotPresent
+        
+        # ৩. কনফিগারেশন Separation
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+
+        # ৪. রিসোর্স নির্ধারণ
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "250Mi"
+
+        # ৫. হেলথ চেকস
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+
+      terminationGracePeriodSeconds: 30
